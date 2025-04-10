@@ -1,3 +1,1 @@
-import "./style.css";
-
-export { sum } from "./sum";
+console.log('hello world'); // this is a comment lin

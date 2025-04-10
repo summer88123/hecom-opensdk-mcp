@@ -1,43 +1,38 @@
 {
-  "name": "hecom-opensdk-mcp",
-  "private": true,
-  "version": "0.0.1",
-  "module": "./dist/index.js",
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js"
+    "name": "hecom-opensdk-mcp",
+    "private": true,
+    "version": "0.0.1",
+    "description": "红圈云 OpenApi MCP Server",
+    "homepage": "https://github.com/summer88123/hecom-opensdk-mcp",
+    "author": "summer88123",
+    "module": "./dist/index.js",
+    "type": "module",
+    "bin": {
+        "mcp-server-hecom": "dist/index.js"
     },
-    "./dist/": {
-      "import": "./dist/"
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc && shx chmod +x dist/*.js",
+        "prepare": "npm run build",
+        "watch": "tsc --watch",
+        "format": "prettier . --write"
+    },
+    "devDependencies": {
+        "@types/eslint-config-prettier": "^6.11.3",
+        "@types/jsdom": "^21.1.7",
+        "@types/node": "^22.13.5",
+        "eslint": "^9.21.0",
+        "eslint-config-prettier": "^10.0.1",
+        "eslint-plugin-prettier": "^5.2.3",
+        "husky": "^9.1.7",
+        "lint-staged": "^15.4.3",
+        "prettier": "^3.5.2",
+        "shx": "^0.3.4",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.3",
+        "typescript-eslint": "^8.25.0"
     }
-  },
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "dev": "vite --host",
-    "build": "tsc",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint . --ext .ts",
-    "format": "prettier . --write",
-    "uninstall-husky": "npm uninstall husky --no-save && git config --unset core.hooksPath && npx rimraf .husky"
-  },
-  "devDependencies": {
-    "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.13.5",
-    "@vitest/coverage-v8": "^3.0.7",
-    "copyfiles": "^2.4.1",
-    "eslint": "^9.21.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.3",
-    "husky": "^9.1.7",
-    "jiti": "^2.4.2",
-    "lint-staged": "^15.4.3",
-    "prettier": "^3.5.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.25.0",
-    "vite": "^6.2.0",
-    "vitest": "^3.0.7"
-  }
 }
