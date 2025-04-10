@@ -1,5 +1,5 @@
 {
-    "name": "hecom-opensdk-mcp",
+    "name": "hecom-openapi-mcp",
     "private": true,
     "version": "0.0.1",
     "description": "红圈云 OpenApi MCP Server",
@@ -18,6 +18,7 @@
         "build": "tsc && shx chmod +x dist/*.js",
         "prepare": "npm run build",
         "watch": "tsc --watch",
+        "inspector": "shx ./script/inspector.sh",
         "format": "prettier . --write"
     },
     "devDependencies": {
@@ -34,5 +35,11 @@
         "ts-node": "^10.9.2",
         "typescript": "^5.7.3",
         "typescript-eslint": "^8.25.0"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.9.0",
+        "hecom-openapi": "github:summer88123/hecom-openapi-javascript",
+        "zod": "^3.24.2",
+        "zod-to-json-schema": "^3.24.5"
     }
 }
