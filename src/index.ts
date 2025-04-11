@@ -18,7 +18,7 @@ const hecom = new HClient({
     apiHost: process.env.HECOM_HOST || '',
 });
 
-server.tool('get-objects', '获取可用的对象列表', {}, async () => {
+server.tool('get-objects', '获取可用的对象列表', async () => {
     const objects = await hecom.getObjects();
 
     if (!objects || objects.length === 0) {
@@ -77,10 +77,11 @@ server.tool(
         };
     }
 );
+
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Weather MCP Server running on stdio');
+    console.error('Hecom MCP Server running on stdio');
 }
 
 main().catch(error => {
