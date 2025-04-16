@@ -15,10 +15,9 @@
         "dist"
     ],
     "scripts": {
-        "build": "tsc && shx chmod +x dist/*.js",
+        "build": "tsc && shx cp -r src/doc dist && shx chmod +x dist/*.js",
         "prepare": "npm run build",
         "watch": "tsc --watch",
-        "inspector": "shx ./script/inspector.sh",
         "format": "prettier . --write"
     },
     "devDependencies": {
