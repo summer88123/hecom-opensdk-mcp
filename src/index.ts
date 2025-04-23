@@ -1,10 +1,10 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import HClient, { ObjectMeta } from 'hecom-openapi';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import HecomClient from './HecomClient.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 console.error('dirname', __dirname);
@@ -16,14 +16,14 @@ const server = new McpServer({
         tools: {},
     },
 });
-const hecom = new HClient({
+const hecom = new HecomClient({
     clientId: process.env.HECOM_CLIENT_ID || '',
     clientSecret: process.env.HECOM_CLIENT_SECRET || '',
     username: process.env.HECOM_USERNAME || '',
     apiHost: process.env.HECOM_HOST || '',
 });
 
-server.tool('get-objects', '获取可用的对象列表', async () => {
+const getObjects = server.tool('get-objects', '获取可用的对象列表', async () => {
     const objects = await hecom.getObjects();
 
     if (!objects || objects.length === 0) {
@@ -44,7 +44,7 @@ server.tool('get-objects', '获取可用的对象列表', async () => {
                 text: JSON.stringify(
                     objects
                         .filter(o => o.label.length > 5)
-                        .map((obj: ObjectMeta) => ({
+                        .map((obj) => ({
                             label: obj.label,
                             name: obj.name,
                             description: obj.description,
@@ -55,7 +55,7 @@ server.tool('get-objects', '获取可用的对象列表', async () => {
     };
 });
 
-server.tool(
+const getObjectDesc = server.tool(
     'get-object-desc',
     '获取对象的描述，包括对象bizType列表和field列表，如果用户提到了具体的对象，始终应该先调用这个工具来获取对象的描述',
     { label: z.string().describe(''), name: z.string().describe('对象name') },
@@ -77,6 +77,101 @@ server.tool(
                 {
                     type: 'text',
                     text: JSON.stringify(object),
+                },
+            ],
+        };
+    }
+);
+
+const getDescToolList: RegisteredTool[] = []
+
+const markObjects = server.tool(
+    'mark-objects',
+    '专注某些对象，当用户需要 **标记** **选择** 某些特定对象时使用，如果你不知道有哪些对象可以选择，可以先调用 get-objects 工具',
+    {
+        objects: z.array(
+            z.object({
+                label: z.string().describe('对象标签'),
+                name: z.string().describe('对象name')
+            })
+        )
+    },
+    async ({ objects }) => {
+        const list = await hecom.markObjects(objects);
+
+        if (!list || list.length === 0) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `标记对象失败，未找到匹配的对象`,
+                    },
+                ],
+            };
+        }
+
+        const objectNames = list.map(obj => obj.name).join(', ');
+
+        // 隐藏getObjects和getObjectDesc工具
+        getObjectDesc.disable();
+
+        // 为每个标记的对象创建直接获取对象描述的工具
+        for (const obj of list) {
+            const tool = server.tool(
+                `get-${obj.name}-desc`,
+                `获取 ${obj.label}(${obj.name}) 对象的描述信息，包括对象bizType列表和field列表，如果用户提到了具体的对象，始终应该先调用这个工具来获取对象的描述`,
+                async () => {
+                    const object = await hecom.getObjectDescription(obj.name);
+
+                    if (!object) {
+                        return {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: `对象 ${obj.name} 不存在`,
+                                },
+                            ],
+                        };
+                    }
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: JSON.stringify(object),
+                            },
+                        ],
+                    };
+                }
+            );
+            getDescToolList.push(tool);
+        }
+
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `标记对象 ${objectNames} 成功，已创建对应的对象描述工具`,
+                },
+            ],
+        };
+    }
+);
+
+const clearMarkObjects = server.tool(
+    'clear-mark-objects',
+    '清除标记的对象，清除所有标记的对象，恢复默认状态',
+    async () => {   
+        // 恢复默认状态，启用getObjectDesc工具
+        getObjectDesc.enable();
+        for (const tool of getDescToolList) {
+            tool.remove(); // 移除工具
+        }
+        getDescToolList.length = 0; // 清空工具列表
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `清除标记对象成功`,
                 },
             ],
         };
