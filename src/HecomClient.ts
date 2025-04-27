@@ -56,7 +56,7 @@ export default class HecomClient {
     /**
      * 获取所有对象列表，有缓存
      */
-    async getObjects(): Promise<ObjectMeta[]> {
+    public async getObjects(): Promise<ObjectMeta[]> {
         // 如果有缓存且未过期，直接返回缓存的数据
         if (this.objectsCache && !this.isCacheExpired(this.objectsCache.timestamp)) {
             return this.objectsCache.data;
@@ -80,7 +80,7 @@ export default class HecomClient {
      * 获取对象描述信息，有缓存
      * @param name 对象名称
      */
-    async getObjectDescription(name: string): Promise<ObjectDescription | null> {
+    public async getObjectDescription(name: string): Promise<ObjectDescription | null> {
         // 如果有缓存且未过期，直接返回缓存的数据
         const cached = this.objectDescCache.get(name);
         if (cached && !this.isCacheExpired(cached.timestamp)) {
@@ -101,10 +101,16 @@ export default class HecomClient {
         return objectDesc;
     }
 
+    public async queryObjectDataWithSQL(sql: string): Promise<any[]> {
+        // 调用 API 获取对象数据    
+        const data = await this.client.queryDataBySQL(sql);
+        return data.records || [];
+    }
+
     /**
      * 清除缓存
      */
-    clearCache(): void {
+    public clearCache(): void {
         this.objectsCache = null;
         this.objectDescCache.clear();
     }
@@ -113,7 +119,7 @@ export default class HecomClient {
      * 清除特定对象的描述缓存
      * @param name 对象名称
      */
-    clearObjectDescriptionCache(name: string): void {
+    public clearObjectDescriptionCache(name: string): void {
         this.objectDescCache.delete(name);
     }
 
@@ -121,7 +127,7 @@ export default class HecomClient {
      * 设置缓存过期时间（毫秒）
      * @param milliseconds 过期时间（毫秒）
      */
-    setCacheExpirationTime(milliseconds: number): void {
+    public setCacheExpirationTime(milliseconds: number): void {
         this.cacheExpirationMs = milliseconds;
     }
 
@@ -130,7 +136,7 @@ export default class HecomClient {
      * @param objects 要查找的对象数组，包含name和label
      * @returns 匹配到的对象数组
      */
-    markObjects(objects: { name: string; label: string; }[]): ObjectMeta[] {
+    public markObjects(objects: { name: string; label: string|null; }[]): ObjectMeta[] {
         if (!this.objectsCache || !this.objectsCache.data || this.objectsCache.data.length === 0) {
             return [];
         }
@@ -147,7 +153,6 @@ export default class HecomClient {
             // 将找到的对象添加到结果中
             result.push(...matched);
         }
-
         return result;
     }
 }

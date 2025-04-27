@@ -58,7 +58,7 @@ const getObjects = server.tool('get-objects', '获取可用的对象列表', asy
 const getObjectDesc = server.tool(
     'get-object-desc',
     '获取对象的描述，包括对象bizType列表和field列表，如果用户提到了具体的对象，始终应该先调用这个工具来获取对象的描述',
-    { label: z.string().describe(''), name: z.string().describe('对象name') },
+    { label: z.string().describe('').nullable(), name: z.string().describe('对象name') },
     async ({ name }) => {
         const object = await hecom.getObjectDescription(name);
 
@@ -91,7 +91,7 @@ const markObjects = server.tool(
     {
         objects: z.array(
             z.object({
-                label: z.string().describe('对象标签'),
+                label: z.string().describe('对象标签').nullable(),
                 name: z.string().describe('对象name')
             })
         )
@@ -177,6 +177,25 @@ const clearMarkObjects = server.tool(
         };
     }
 );
+
+const getObjectDataBySQL = server.tool(
+    'get-object-data-by-sql',
+    `使用 SQL 语句查询对象数据，如果你不了解对象的数据结构，可以先调用get-object-desc工具来获取对象的描述。
+        SQL 仅支持基础的查询，不支持复杂的查询和联表查询，不支持函数例如SUM、YEAR等。
+    `,
+    { sql: z.string().describe('SQL 语句') },
+    async ({ sql }) => {
+        const data = await hecom.queryObjectDataWithSQL(sql);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(data),
+                },
+            ],
+        };
+    }
+)
 
 async function readMarkdownFile(filePath: string): Promise<string> {
     try {
