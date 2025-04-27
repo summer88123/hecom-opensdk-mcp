@@ -136,7 +136,7 @@ export default class HecomClient {
      * @param objects 要查找的对象数组，包含name和label
      * @returns 匹配到的对象数组
      */
-    public markObjects(objects: { name: string; label: string|null; }[]): ObjectMeta[] {
+    public markObjects(objects: { name: string; label?: string; }[]): ObjectMeta[] {
         if (!this.objectsCache || !this.objectsCache.data || this.objectsCache.data.length === 0) {
             return [];
         }

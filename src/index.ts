@@ -58,7 +58,7 @@ const getObjects = server.tool('get-objects', '获取可用的对象列表', asy
 const getObjectDesc = server.tool(
     'get-object-desc',
     '获取对象的描述，包括对象bizType列表和field列表，如果用户提到了具体的对象，始终应该先调用这个工具来获取对象的描述',
-    { label: z.string().describe('').nullable(), name: z.string().describe('对象name') },
+    { label: z.string().describe('').optional(), name: z.string().describe('对象name') },
     async ({ name }) => {
         const object = await hecom.getObjectDescription(name);
 
@@ -91,7 +91,7 @@ const markObjects = server.tool(
     {
         objects: z.array(
             z.object({
-                label: z.string().describe('对象标签').nullable(),
+                label: z.string().describe('对象标签').optional(),
                 name: z.string().describe('对象name')
             })
         )
