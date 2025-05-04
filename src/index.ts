@@ -41,15 +41,7 @@ const getObjects = server.tool('get-objects', '获取可用的对象列表', asy
         content: [
             {
                 type: 'text',
-                text: JSON.stringify(
-                    objects
-                        .filter(o => o.label.length > 5)
-                        .map((obj) => ({
-                            label: obj.label,
-                            name: obj.name,
-                            description: obj.description,
-                        }))
-                ),
+                text: JSON.stringify(objects),
             },
         ],
     };
@@ -59,15 +51,15 @@ const getObjectDesc = server.tool(
     'get-object-desc',
     '获取对象的描述，包括对象bizType列表和field列表，如果用户提到了具体的对象，始终应该先调用这个工具来获取对象的描述',
     { label: z.string().describe('').optional(), name: z.string().describe('对象name') },
-    async ({ name }) => {
-        const object = await hecom.getObjectDescription(name);
+    async ({ name, label }) => {
+        const object = await hecom.getObjectDescription(name, label);
 
         if (!object) {
             return {
                 content: [
                     {
                         type: 'text',
-                        text: `对象 ${name} 不存在`,
+                        text: `对象 ${label || name} 不存在`,
                     },
                 ],
             };
@@ -83,7 +75,7 @@ const getObjectDesc = server.tool(
     }
 );
 
-const getDescToolList: RegisteredTool[] = []
+const getDescToolList: RegisteredTool[] = [];
 
 const markObjects = server.tool(
     'mark-objects',
@@ -92,9 +84,9 @@ const markObjects = server.tool(
         objects: z.array(
             z.object({
                 label: z.string().describe('对象标签').optional(),
-                name: z.string().describe('对象name')
+                name: z.string().describe('对象name'),
             })
-        )
+        ),
     },
     async ({ objects }) => {
         const list = await hecom.markObjects(objects);
@@ -160,7 +152,7 @@ const markObjects = server.tool(
 const clearMarkObjects = server.tool(
     'clear-mark-objects',
     '清除标记的对象，清除所有标记的对象，恢复默认状态',
-    async () => {   
+    async () => {
         // 恢复默认状态，启用getObjectDesc工具
         getObjectDesc.enable();
         for (const tool of getDescToolList) {
@@ -195,13 +187,14 @@ const getObjectDataBySQL = server.tool(
             ],
         };
     }
-)
+);
 
 async function readMarkdownFile(filePath: string): Promise<string> {
     try {
         const content = fs.readFileSync(filePath, 'utf8');
         // 移除markdown注释 ([//]: # 开头的行)
-        return content.split('\n')
+        return content
+            .split('\n')
             .filter((line: string) => !line.trim().startsWith('[//]: #'))
             .join('\n');
     } catch (error) {
@@ -211,9 +204,7 @@ async function readMarkdownFile(filePath: string): Promise<string> {
 }
 
 async function getDocuments(docFiles: string[]): Promise<string> {
-    const contents = await Promise.all(
-        docFiles.map(file => readMarkdownFile(path.resolve(__dirname, './doc', file)))
-    );
+    const contents = await Promise.all(docFiles.map(file => readMarkdownFile(path.resolve(__dirname, './doc', file))));
 
     return contents.join('\n\n');
 }
@@ -225,25 +216,13 @@ const apiDocFiles = [
     'device.md',
     'storage.md',
     'network.md',
-    'user-interface.md'
+    'user-interface.md',
 ];
-const componentDocFiles = [
-    'style.md',
-    'Flex.md',
-    'Text.md',
-    'Button.md',
-    'FilePicker.md',
-    'Link.md',
-    'Modal.md',
-];
-const formPluginDocFiles = [
-    'form-page.md',
-];
-const detailPluginDocFiles = [
-    'detail-page.md',
-];
+const componentDocFiles = ['style.md', 'Flex.md', 'Text.md', 'Button.md', 'FilePicker.md', 'Link.md', 'Modal.md'];
+const formPluginDocFiles = ['form-page.md'];
+const detailPluginDocFiles = ['detail-page.md'];
 
-server.tool('form-page-API', '获取对象表单页插件文档，包含表单页的各种生命周期和事件回调', async () => {
+const formPageAPI = server.tool('form-page-API', '获取对象表单页插件文档，包含表单页的各种生命周期和事件回调', async () => {
     console.error('form-page-API');
 
     const cleanContent = await getDocuments(formPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
@@ -258,7 +237,7 @@ server.tool('form-page-API', '获取对象表单页插件文档，包含表单�
     };
 });
 
-server.tool('detail-page-API', '获取对象详情页插件文档，包含详情页的各种生命周期和事件回调', async () => {
+const detailPageAPI = server.tool('detail-page-API', '获取对象详情页插件文档，包含详情页的各种生命周期和事件回调', async () => {
     console.error('detail-page-API');
 
     const cleanContent = await getDocuments(detailPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
@@ -272,6 +251,9 @@ server.tool('detail-page-API', '获取对象详情页插件文档，包含详情
         ],
     };
 });
+
+formPageAPI.disable(); // 禁用表单页API工具
+detailPageAPI.disable(); // 禁用详情页API工具
 
 async function main() {
     const transport = new StdioServerTransport();
