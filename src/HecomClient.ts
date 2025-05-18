@@ -1,4 +1,4 @@
-import HClient, { BizType } from 'hecom-openapi';
+import HClient, { BizRecord, BizType } from 'hecom-openapi';
 
 interface Meta {
     name: string;
@@ -183,5 +183,16 @@ export default class HecomClient {
             result.push(...matched);
         }
         return result;
+    }
+
+    public async createUser(user: Partial<BizRecord>): Promise<string> {
+        const response = await this.client.createUser(user);
+        return response;
+    }
+
+    public async queryDeptsBySQL(sql: string): Promise<any[]> {
+        // 调用 API 获取对象数据
+        const data = await this.client.queryDeptsBySQL(sql);
+        return data.records || [];
     }
 }

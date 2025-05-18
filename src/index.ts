@@ -189,6 +189,58 @@ const getObjectDataBySQL = server.tool(
     }
 );
 
+const queryDeptList = server.tool(
+    'query-dept-list',
+    '获取部门列表',
+    { sql: z.string().describe('查询SQL') },
+    async ({ sql }) => {
+        const depts = await hecom.queryDeptsBySQL(sql);
+        if (!depts || depts.length === 0) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: '没有可用的部门列表',
+                    },
+                ],
+            };
+        }
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(depts),
+                },
+            ],
+        };
+    }
+);
+
+const createUserTool = server.tool(
+    'create-user',
+    '创建用户',
+    {
+        name: z.string().describe('用户姓名'),
+        phone: z.string().describe('用户电话'),
+        dept: z
+            .object({ code: z.string().describe('部门编号'), name: z.string().describe('部门名称').optional() })
+            .describe('用户部门')
+            .optional(),
+    },
+    async user => {
+        console.log('Creating user:', user);
+        const result = await hecom.createUser(user);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `用户 ${user.name} 创建成功`,
+                },
+            ],
+        };
+    }
+);
+
 async function readMarkdownFile(filePath: string): Promise<string> {
     try {
         const content = fs.readFileSync(filePath, 'utf8');
@@ -222,35 +274,43 @@ const componentDocFiles = ['style.md', 'Flex.md', 'Text.md', 'Button.md', 'FileP
 const formPluginDocFiles = ['form-page.md'];
 const detailPluginDocFiles = ['detail-page.md'];
 
-const formPageAPI = server.tool('form-page-API', '获取对象表单页插件文档，包含表单页的各种生命周期和事件回调', async () => {
-    console.error('form-page-API');
+const formPageAPI = server.tool(
+    'form-page-API',
+    '获取对象表单页插件文档，包含表单页的各种生命周期和事件回调',
+    async () => {
+        console.error('form-page-API');
 
-    const cleanContent = await getDocuments(formPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
+        const cleanContent = await getDocuments(formPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
 
-    return {
-        content: [
-            {
-                type: 'text',
-                text: cleanContent,
-            },
-        ],
-    };
-});
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: cleanContent,
+                },
+            ],
+        };
+    }
+);
 
-const detailPageAPI = server.tool('detail-page-API', '获取对象详情页插件文档，包含详情页的各种生命周期和事件回调', async () => {
-    console.error('detail-page-API');
+const detailPageAPI = server.tool(
+    'detail-page-API',
+    '获取对象详情页插件文档，包含详情页的各种生命周期和事件回调',
+    async () => {
+        console.error('detail-page-API');
 
-    const cleanContent = await getDocuments(detailPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
+        const cleanContent = await getDocuments(detailPluginDocFiles.concat(apiDocFiles).concat(componentDocFiles));
 
-    return {
-        content: [
-            {
-                type: 'text',
-                text: cleanContent,
-            },
-        ],
-    };
-});
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: cleanContent,
+                },
+            ],
+        };
+    }
+);
 
 formPageAPI.disable(); // 禁用表单页API工具
 detailPageAPI.disable(); // 禁用详情页API工具
