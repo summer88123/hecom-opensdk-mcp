@@ -136,6 +136,11 @@ export default class HecomClient {
         return data.records || [];
     }
 
+    public async queryCodeByName(metaName: string, name: string) {
+        // 调用 API 获取对象数据
+        const data = await this.client.queryDataBySQL(`SELECT code, name FROM ${metaName} WHERE name like '%${name}%'`);
+    }
+
     /**
      * 清除缓存
      */

@@ -189,6 +189,23 @@ const getObjectDataBySQL = server.tool(
     }
 );
 
+const queryCodeByName = server.tool(
+    'query-code-by-name',
+    '根据数据标题查询数据的code。编写Lookup、MainDetail类型字段的SQL时，不能直接只用label或者name来查询数据，需要使用code来查询数据。',
+    { metaName: z.string().describe('对象name'), name: z.string().describe('对象数据标题') },
+    async ({ metaName, name }) => {
+        const data = await hecom.queryCodeByName(metaName, name);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(data),
+                },
+            ],
+        };
+    }
+);
+
 const queryDeptList = server.tool(
     'query-dept-list',
     '获取部门列表',
